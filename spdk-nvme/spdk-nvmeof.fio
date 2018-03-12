@@ -1,0 +1,30 @@
+[global]
+ioengine=spdk
+thread=64
+group_reporting=1
+direct=1
+verify=0
+time_based=1
+ramp_time=0
+runtime=2
+iodepth=128
+rw=randrw
+bs=4k
+size=1024M
+
+[test_1]
+numjobs=1
+filename=trtype=RDMA adrfam=IPv4 traddr=10.99.1.1 trsvcid=4420 ns=1
+
+[test_2]
+numjobs=1
+filename=trtype=RDMA adrfam=IPv4 traddr=10.99.1.1 trsvcid=4420 ns=2
+
+[test_3]
+numjobs=1
+filename=trtype=RDMA adrfam=IPv4 traddr=10.99.1.1 trsvcid=4420 ns=3
+
+[test_4]
+numjobs=1
+filename=trtype=RDMA adrfam=IPv4 traddr=10.99.1.1 trsvcid=4420 ns=4
+

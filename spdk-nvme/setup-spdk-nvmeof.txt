@@ -1,0 +1,65 @@
+###### Build spdk ######
+
+-----Target/Initiator---------
+
+--> compile latest kernel with nvmeof
+https://community.mellanox.com/docs/DOC-2504
+
+--> With fio (https://github.com/spdk/spdk/tree/master/examples/nvme/fio_plugin)
+git clone https://github.com/axboe/fio
+cd fio && git checkout tags/fio-3.3 -b fio-3.3
+make
+
+--> Compile spdk (https://github.com/spdk/spdk)
+git clone https://github.com/spdk/spdk
+cd spdk
+git submodule update --init
+./scripts/pkgdep.sh
+cd spdk && ./configure --with-rdma --with-fio=/path/to/fio/repo <other configuration options>
+HUGEMEM=8192 scripts/setup.sh
+./unittest.sh
+
+
+##### Setup #####
+
+-----Target------------
+
+-----> load modules
+modprobe ib_cm
+modprobe ib_core
+modprobe ib_ucm
+modprobe ib_umad
+modprobe ib_uverbs
+modprobe iw_cm
+modprobe rdma_cm
+modprobe rdma_ucm
+
+modprobe mlx4_core
+modprobe mlx4_ib
+modprobe mlx4_en
+
+modprobe mlx5_core
+modprobe mlx5_ib
+
+----> modprobe null_blk nr_devices=64
+
+----> Configure spdk-nvmet.conf
+Refer spdk-nvmet.conf
+
+---->Start target
+./app/nvmf_tgt/nvmf_tgt -c spdk-nvmet.conf
+Make sure there are no ERRORS
+
+--------Initiator-------------
+#Both the Linux kernel and SPDK implement an NVMe over Fabrics host. The Linux kernel NVMe-oF RDMA host support is provided by the nvme-rdma driver
+modprobe nvme_rdma
+
+--> Just want to discover the devices use nvme-cli (git clone https://github.com/linux-nvme/nvme-cli.git)
+nvme discover -t rdma -a 10.99.1.1 -s 4420
+nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a 10.99.1.1 -s 4420
+nvme list
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+
+--> Want to run fio on spdk exported nvmeof devices
+LD_PRELOAD=<path-to-spdk>/spdk/examples/nvme/fio_plugin/fio_plugin <path-to-fio-bin>/fio spdk-conf.fio
+Refer sample spdk-conf.fio
